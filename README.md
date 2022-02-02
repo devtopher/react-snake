@@ -1,0 +1,1 @@
+This is the classic snake game rebuilt using React. I am working on this project alongside my mentor in order to gain a basic knowledge of react. 
