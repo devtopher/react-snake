@@ -12,18 +12,18 @@ const INITIAL_GAME_STATE = {
   // speed: 1000
 }
 //tried everything I could think of to get the speed update to work but no dice
-let speed = 1000
-let speedToggle = false
-if (speedToggle) {
-  speed = speed * 0
-}
+ let speed = 1000
+//  let speedToggle = false
+//  if (speedToggle) {
+//   speed = speed * 0
+// }
 export default function Home() {
   const [gameState, setGameState] = useState(INITIAL_GAME_STATE);
   const [gameLoopId, setGameLoopId] = useState(-1);
 
   const gameLoop = () => {
     setGameState((currentGameState) => {
-      const { snake, direction, score, speed } = currentGameState;
+      const { snake, direction, score } = currentGameState;
       console.log("Looping", direction, snake, score, speed);
 
       const currentSnakeHead = snake[snake.length - 1];
@@ -36,7 +36,7 @@ export default function Home() {
       function generateApples() {
         console.log("generating new apple")
         let newApple = -1;
-        speedToggle = true
+        
 
         do { newApple = Math.floor(Math.random() * 100) }
         while (snake.includes(newApple))
@@ -55,8 +55,11 @@ export default function Home() {
       } else if (snake.includes(apple)) {
         generateApples()
         score++
-        // setSpeed(speed*0)
-        // speed = speed * 0
+        // speed = speed * .5
+        //clearInterval(gameLoopId)
+        // setInterval(gameLoop, speed)
+        //  setSpeed(speed*0)
+        //speed = speed * 0
         console.log(speed)
         nextSnake = [];
         for (let i = 0; i <= snake.length - 1; i++) {
@@ -79,7 +82,7 @@ export default function Home() {
         isDead,
         snake: nextSnake,
         score,
-        // speed
+        speed
       };
     });
   };
@@ -92,15 +95,14 @@ export default function Home() {
       isDead: false
     });
   }
-
-  // function setSpeed(speed) {
-  //   setGameState((currentGameState) => {
-  //     return {
-  //       ...currentGameState,
-  //       speed
-  //     }
-  //   })
-  // }
+// function setSpeed(speed) {
+//  setGameState((currentGameState) => {
+//  return {
+//     ...currentGameState,
+//       speed
+//    }
+// })
+// }
 
 
   function setDirection(direction) {
@@ -127,21 +129,22 @@ export default function Home() {
 
     document.addEventListener("keydown", keyHandler);
 
-    if (!gameState.isDead && gameLoopId === -1) {
-      clearInterval(gameLoopId)
-      const newGameLoopId = setInterval(gameLoop, speed);
-      
-      setGameLoopId(newGameLoopId);
-    } else if (gameState.isDead && gameLoopId !== -1) {
-      console.log("game loop done")
-      clearInterval(gameLoopId);
-      setGameLoopId(-1);
-    }
+   
 
     return () => {
       document.removeEventListener("keydown", keyHandler);
     }
   }, [gameState.isDead, gameState.gameLoopId]);
+  if (!gameState.isDead && gameLoopId === -1) {
+    clearInterval(gameLoopId)
+     const newGameLoopId = setInterval(gameLoop, speed);
+    
+     setGameLoopId(newGameLoopId);
+  }else if (gameState.isDead && gameLoopId !== -1) {
+    console.log("game loop done")
+    clearInterval(gameLoopId);
+    setGameLoopId(-1);
+  }
 
   return <>
     {gameState.direction} - {JSON.stringify(gameState.snake)} - Is dead: {gameState.isDead}
