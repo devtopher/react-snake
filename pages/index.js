@@ -9,21 +9,21 @@ const INITIAL_GAME_STATE = {
   apple: 27,
   born: false,
   isDead: true,
-  // speed: 1000
+  speed: 1000
 }
-//tried everything I could think of to get the speed update to work but no dice
- let speed = 1000
-//  let speedToggle = false
-//  if (speedToggle) {
-//   speed = speed * 0
-// }
+
+if (global.window) {
+  window.allIntervals = [];
+  window.clearedIntervals = [];
+}
+
 export default function Home() {
   const [gameState, setGameState] = useState(INITIAL_GAME_STATE);
   const [gameLoopId, setGameLoopId] = useState(-1);
 
   const gameLoop = () => {
     setGameState((currentGameState) => {
-      const { snake, direction, score } = currentGameState;
+      const { snake, direction, score, speed } = currentGameState;
       console.log("Looping", direction, snake, score, speed);
 
       const currentSnakeHead = snake[snake.length - 1];
@@ -32,12 +32,11 @@ export default function Home() {
 
       let isDead = currentGameState.isDead;
       let apple = currentGameState.apple;
-      // let speed = currentGameState.speed;
+
       function generateApples() {
         console.log("generating new apple")
         let newApple = -1;
         
-
         do { newApple = Math.floor(Math.random() * 100) }
         while (snake.includes(newApple))
 
@@ -55,12 +54,7 @@ export default function Home() {
       } else if (snake.includes(apple)) {
         generateApples()
         score++
-        // speed = speed * .5
-        //clearInterval(gameLoopId)
-        // setInterval(gameLoop, speed)
-        //  setSpeed(speed*0)
-        //speed = speed * 0
-        console.log(speed)
+        speed = speed * .9
         nextSnake = [];
         for (let i = 0; i <= snake.length - 1; i++) {
           nextSnake.push(snake[i]);
@@ -95,15 +89,6 @@ export default function Home() {
       isDead: false
     });
   }
-// function setSpeed(speed) {
-//  setGameState((currentGameState) => {
-//  return {
-//     ...currentGameState,
-//       speed
-//    }
-// })
-// }
-
 
   function setDirection(direction) {
     setGameState((currentGameState) => {
@@ -115,6 +100,29 @@ export default function Home() {
   }
 
   useEffect(() => {
+      clearInterval(gameLoopId)
+      const newGameLoopIdWithSpeedChange = setInterval(gameLoop, gameState.speed)
+      setGameLoopId(newGameLoopIdWithSpeedChange)
+  },[gameState.speed])
+
+  useEffect(() => {
+    if (!window.originalSetInterval) {
+      window.originalSetInterval = window.setInterval;
+      window.originalClearInterval = window.clearInterval;
+
+      window.setInterval = function(func, delay) {
+          const intervalId = window.originalSetInterval(func, delay);
+          window.allIntervals.push(intervalId);
+          return intervalId;
+      };
+
+      window.clearInterval = function(timerID) {
+          window.clearedIntervals.push(timerID)
+          window.originalClearInterval(timerID);
+      };
+
+    }
+
     const keyHandler = (e) => {
       if (e.key === "ArrowLeft") {
         setDirection(-1);
@@ -129,22 +137,20 @@ export default function Home() {
 
     document.addEventListener("keydown", keyHandler);
 
-   
+    if (!gameState.isDead && gameLoopId === -1) {
+      const newGameLoopId = setInterval(gameLoop, gameState.speed);
+      console.log("first if")
+      setGameLoopId(newGameLoopId);
+    } else if (gameState.isDead && gameLoopId !== -1) {
+      console.log("game loop done")
+      clearInterval(gameLoopId);
+      setGameLoopId(-1);
+    }
 
     return () => {
       document.removeEventListener("keydown", keyHandler);
     }
-  }, [gameState.isDead, gameState.gameLoopId]);
-  if (!gameState.isDead && gameLoopId === -1) {
-    clearInterval(gameLoopId)
-     const newGameLoopId = setInterval(gameLoop, speed);
-    
-     setGameLoopId(newGameLoopId);
-  }else if (gameState.isDead && gameLoopId !== -1) {
-    console.log("game loop done")
-    clearInterval(gameLoopId);
-    setGameLoopId(-1);
-  }
+  }, [gameState.isDead, gameLoopId]);
 
   return <>
     {gameState.direction} - {JSON.stringify(gameState.snake)} - Is dead: {gameState.isDead}
